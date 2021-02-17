@@ -1,0 +1,6 @@
+<?php
+
+return [
+    '1B323B4A4B47C303AA8FDEBBCC31BE50', // Degenerator
+    '88BE4A3FC9C5E541C06CD7DE34A4918C', // AzazeL
+];

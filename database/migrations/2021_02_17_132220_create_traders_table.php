@@ -17,26 +17,31 @@ class CreateTradersTable extends Migration
             $table->id();
 
             $table->string('uid', 32);
-            $table->string('name');
+            $table->string('nick');
             $table->boolean('sharing');
-            $table->string('twitter');
+            $table->string('twitter')->nullable();
 
-            $table->unsignedSmallInteger('ranking');
-            $table->unsignedSmallInteger('ranking_day');
-            $table->unsignedSmallInteger('ranking_week');
-            $table->unsignedSmallInteger('ranking_month');
+            $table->unsignedInteger('rank_roi');
+            $table->unsignedInteger('rank_roi_day');
+            $table->unsignedInteger('rank_roi_week');
+            $table->unsignedInteger('rank_roi_month');
 
-            $table->unsignedSmallInteger('roi');
-            $table->unsignedSmallInteger('roi_day');
-            $table->unsignedSmallInteger('roi_week');
-            $table->unsignedSmallInteger('roi_month');
+            $table->double('rank_pnl');
+            $table->double('rank_pnl_day');
+            $table->double('rank_pnl_week');
+            $table->double('rank_pnl_month');
 
-            $table->unsignedSmallInteger('pnl');
-            $table->unsignedSmallInteger('pnl_day');
-            $table->unsignedSmallInteger('pnl_week');
-            $table->unsignedSmallInteger('pnl_month');
+            $table->double('roi');
+            $table->double('roi_day');
+            $table->double('roi_week');
+            $table->double('roi_month');
 
-            $table->dateTime('unshared_at');
+            $table->double('pnl');
+            $table->double('pnl_day');
+            $table->double('pnl_week');
+            $table->double('pnl_month');
+
+            $table->dateTime('last_unshared_at')->nullable();
         });
     }
 

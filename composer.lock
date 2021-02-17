@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0bad78c8653e96cfdb0ae60ceb5d51ac",
+    "content-hash": "24b478f338581915ee1394e95311c923",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -2429,6 +2429,65 @@
             "time": "2020-08-18T17:17:46+00:00"
         },
         {
+            "name": "spatie/data-transfer-object",
+            "version": "2.8.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/spatie/data-transfer-object.git",
+                "reference": "2625a59566804ec63f01947d85947336237cbda6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/spatie/data-transfer-object/zipball/2625a59566804ec63f01947d85947336237cbda6",
+                "reference": "2625a59566804ec63f01947d85947336237cbda6",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4|^8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.0"
+            },
+            "suggest": {
+                "phpstan/phpstan": "Take advantage of checkUninitializedProperties with \\Spatie\\DataTransferObject\\PHPstan\\PropertiesAreAlwaysInitializedExtension"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Spatie\\DataTransferObject\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Brent Roose",
+                    "email": "brent@spatie.be",
+                    "homepage": "https://spatie.be",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Data transfer objects with batteries included",
+            "homepage": "https://github.com/spatie/data-transfer-object",
+            "keywords": [
+                "data-transfer-object",
+                "spatie"
+            ],
+            "support": {
+                "issues": "https://github.com/spatie/data-transfer-object/issues",
+                "source": "https://github.com/spatie/data-transfer-object/tree/2.8.3"
+            },
+            "funding": [
+                {
+                    "url": "https://www.patreon.com/spatie",
+                    "type": "patreon"
+                }
+            ],
+            "time": "2021-02-12T08:46:52+00:00"
+        },
+        {
             "name": "swiftmailer/swiftmailer",
             "version": "v6.2.5",
             "source": {
@@ -4724,6 +4783,68 @@
                 "source": "https://github.com/tijsverkoyen/CssToInlineStyles/tree/2.2.3"
             },
             "time": "2020-07-13T06:12:54+00:00"
+        },
+        {
+            "name": "vkovic/laravel-commando",
+            "version": "v0.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/vkovic/laravel-commando.git",
+                "reference": "f5284a15d4417ba9b1935fead3b79f043e5af4aa"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/vkovic/laravel-commando/zipball/f5284a15d4417ba9b1935fead3b79f043e5af4aa",
+                "reference": "f5284a15d4417ba9b1935fead3b79f043e5af4aa",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.3|^8.0"
+            },
+            "require-dev": {
+                "laravel/framework": "8.*",
+                "orchestra/database": "6.*",
+                "orchestra/testbench": "6.*",
+                "phpunit/phpunit": "^9.3.3"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Vkovic\\LaravelCommando\\Providers\\CommandoServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Vkovic\\LaravelCommando\\": "src"
+                },
+                "files": [
+                    "src/helpers.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Vladimir Ković",
+                    "email": "vlada.kovic@gmail.com"
+                }
+            ],
+            "description": "Collection of handy Laravel artisan commands that most projects needs",
+            "keywords": [
+                "artisan",
+                "commands",
+                "console",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/vkovic/laravel-commando/issues",
+                "source": "https://github.com/vkovic/laravel-commando/tree/v0.2.0"
+            },
+            "time": "2021-01-29T00:26:26+00:00"
         },
         {
             "name": "vlucas/phpdotenv",
@@ -7421,7 +7542,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.3|^8.0"
+        "php": "^7.4|^8.0"
     },
     "platform-dev": [],
     "plugin-api-version": "2.0.0"
