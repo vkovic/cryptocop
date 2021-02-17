@@ -33,45 +33,64 @@ class TraderSync extends Command
     public function handle()
     {
         $traderUids = config('traders');
-        $url = 'https://www.binance.com/gateway-api/v1/public/future/leaderboard/getOtherLeaderboardBaseInfo';
+        $baseInfoUrl = 'https://www.binance.com/gateway-api/v1/public/future/leaderboard/getOtherLeaderboardBaseInfo';
+        $infoUrl = 'https://www.binance.com/gateway-api/v1/public/future/leaderboard/getOtherLeaderboardInfo';
 
         foreach ($traderUids as $traderUid) {
-            $payload = [
+            $payloadBaseInfoUrl = [
                 'encryptedUid' => $traderUid,
                 'tradeType' => 'PERPETUAL'
             ];
 
-            $response = Http::post($url, $payload);
-            $rawBody = $response->body();
-            $respArr = json_decode($rawBody);
-            $data = $respArr->data;
+            $payloadInfoUrl = [
+                'encryptedUid' => $traderUid,
+                'tradeType' => 'PERPETUAL',
+                'periodType' => 'ALL',
+            ];
 
-            Trader::create([
-                'uid' => $traderUid,
-                'nick' => $data->nickName,
-                'sharing' => $data->positionShared,
-                'twitter' => $data->twitterUrl,
+            $resp = Http::post($baseInfoUrl, $payloadBaseInfoUrl);
+            $rawBodyBaseInfo = $resp->body();
+            $respArrBaseInfo = json_decode($rawBodyBaseInfo);
+            $dataBaseInfo = $respArrBaseInfo->data;
 
-                'rank_roi' => 0,
-                'rank_roi_day' => $data->dailyRoiRank,
-                'rank_roi_week' => $data->weeklyRoiRank,
-                'rank_roi_month' => $data->monthlyRoiRank,
+            $resp = Http::post($infoUrl, $payloadInfoUrl);
+            $rawBodyInfo = $resp->body();
+            $respArrInfo = json_decode($rawBodyInfo);
+            $dataInfo = $respArrInfo->data;
 
-                'rank_pnl' => 0,
-                'rank_pnl_day' => $data->dailyPnlRank,
-                'rank_pnl_week' => $data->weeklyPnlRank,
-                'rank_pnl_month' => $data->monthlyPnlRank,
+            $trader = Trader::where('uid', $traderUid)->first();
 
-                'roi' => 0,
-                'roi_day' => $data->dailyRoiValue,
-                'roi_week' => $data->weeklyRoiValue,
-                'roi_month' => $data->monthlyRoiValue,
+            if ($trader === null) {
+                $trader = new Trader;
+                $trader->uid = $traderUid;
+            }
 
-                'pnl' => 0,
-                'pnl_day' => $data->dailyPnlValue,
-                'pnl_week' => $data->weeklyPnlValue,
-                'pnl_month' => $data->monthlyPnlValue,
-            ]);
+            $trader->nick = $dataBaseInfo->nickName;
+            $trader->sharing = $dataBaseInfo->positionShared;
+            $trader->twitter = $dataBaseInfo->twitterUrl;
+
+            $trader->rank_roi = $dataInfo->roiRank;
+            $trader->rank_roi_day = $dataBaseInfo->dailyRoiRank;
+            $trader->rank_roi_week = $dataBaseInfo->weeklyRoiRank;
+            $trader->rank_roi_month = $dataBaseInfo->monthlyRoiRank;
+
+            $trader->rank_pnl = $dataInfo->pnlRank;
+            $trader->rank_pnl_day = $dataBaseInfo->dailyPnlRank;
+            $trader->rank_pnl_week = $dataBaseInfo->weeklyPnlRank;
+            $trader->rank_pnl_month = $dataBaseInfo->monthlyPnlRank;
+
+            $trader->roi = $dataInfo->roiValue * 100;
+            $trader->roi_day = $dataBaseInfo->dailyRoiValue * 100;
+            $trader->roi_week = $dataBaseInfo->weeklyRoiValue * 100;
+            $trader->roi_month = $dataBaseInfo->monthlyRoiValue * 100;
+
+            $trader->pnl = $dataInfo->pnlValue;
+            $trader->pnl_day = $dataBaseInfo->dailyPnlValue;
+            $trader->pnl_week = $dataBaseInfo->weeklyPnlValue;
+            $trader->pnl_month = $dataBaseInfo->monthlyPnlValue;
+
+            $trader->save();
+
         }
 
         return 0;

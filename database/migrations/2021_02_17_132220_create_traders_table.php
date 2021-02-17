@@ -21,16 +21,6 @@ class CreateTradersTable extends Migration
             $table->boolean('sharing');
             $table->string('twitter')->nullable();
 
-            $table->unsignedInteger('rank_roi');
-            $table->unsignedInteger('rank_roi_day');
-            $table->unsignedInteger('rank_roi_week');
-            $table->unsignedInteger('rank_roi_month');
-
-            $table->double('rank_pnl');
-            $table->double('rank_pnl_day');
-            $table->double('rank_pnl_week');
-            $table->double('rank_pnl_month');
-
             $table->double('roi');
             $table->double('roi_day');
             $table->double('roi_week');
@@ -40,6 +30,16 @@ class CreateTradersTable extends Migration
             $table->double('pnl_day');
             $table->double('pnl_week');
             $table->double('pnl_month');
+
+            $table->unsignedInteger('rank_roi');
+            $table->unsignedInteger('rank_roi_day');
+            $table->unsignedInteger('rank_roi_week');
+            $table->unsignedInteger('rank_roi_month');
+
+            $table->double('rank_pnl');
+            $table->double('rank_pnl_day');
+            $table->double('rank_pnl_week');
+            $table->double('rank_pnl_month');
 
             $table->dateTime('last_unshared_at')->nullable();
         });
