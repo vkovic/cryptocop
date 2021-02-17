@@ -1,0 +1,49 @@
+version: '3.3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: .docker/app/Dockerfile
+    depends_on:
+      - db
+    volumes:
+      - .:/var/www/html
+    ports:
+      - 80:80
+    command:
+      - /bin/bash
+      - -c
+      - |
+        [ -d vendor/bin ] || composer install
+        [ -f .env ] || { cp .env.example .env; php artisan key:generate --ansi; }
+        apache2-foreground
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: default
+    ports:
+      - 3306:3306
+    volumes:
+      - db-volume:/var/lib/mysql:cached
+
+  node:
+    image: node:15.6.0-buster
+    working_dir: /home/node/app
+    volumes:
+      - ./:/home/node/app
+    command:
+      - /bin/bash
+      - -c
+      - |
+        [ -d node_modules ] || yarn
+  
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 8025:8025
+
+volumes:
+  db-volume:
