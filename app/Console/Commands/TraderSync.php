@@ -91,6 +91,7 @@ class TraderSync extends Command
 
             $trader->save();
 
+            usleep(200000); // 0.2 sec
         }
 
         return 0;
