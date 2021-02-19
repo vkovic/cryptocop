@@ -19,19 +19,16 @@ class CreatePositionsTable extends Migration
 
             $table->string('symbol', 32);
             $table->double('size');
-            $table->double('invested');
-            $table->unsignedTinyInteger('leverage');
-            $table->double('cost');
-            $table->double('entry_price');
-            $table->double('current_price');
+            $table->unsignedDouble('invested');
+            $table->unsignedDouble('leverage');
+            $table->unsignedDouble('cost');
+            $table->unsignedDouble('entry_price');
+            $table->unsignedDouble('mark_price');
             $table->double('pnl');
             $table->double('roe');
 
-            $table->dateTime('provider_updated_at');
             $table->dateTime('opened_at');
-            $table->dateTime('closed_at');
-
-            $table->timestamps();
+            $table->dateTime('closed_at')->nullable();
         });
     }
 
