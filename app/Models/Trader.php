@@ -17,4 +17,9 @@ class Trader extends Model
         'sharing' => 'boolean',
         'last_unshared_at' => 'datetime'
     ];
+
+    public function positions()
+    {
+        return $this->hasMany(Position::class);
+    }
 }

@@ -27,7 +27,7 @@ class CreatePositionsTable extends Migration
             $table->double('pnl');
             $table->double('roe');
 
-            $table->dateTime('opened_at');
+            $table->dateTime('opened_at')->nullable();
             $table->dateTime('closed_at')->nullable();
         });
     }

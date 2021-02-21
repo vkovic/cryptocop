@@ -15,7 +15,7 @@ class PositionSync extends Command
      *
      * @var string
      */
-    protected $signature = 'position:sync';
+    protected $signature = 'sync:position';
 
     /**
      * Create a new command instance.
@@ -51,17 +51,18 @@ class PositionSync extends Command
             // Ids of positions which are obtained from the API.
             // Those are currently present positions for user.
             // Closed positions are not included in the response.
-            $presentTradeIds = [];
+            $presentPositionIds = [];
+
+            // New trader is one which dont have prev. positions
+            $isNewTrader = $trader->positions()->count() === 0;
 
             foreach ($data->otherPositionRetList as $respPosition) {
-                $openedAt = Carbon::createFromTimestampMs($respPosition->updateTimeStamp);
-
+                // Try to find same in our db
                 $position = Position::where([
                     'trader_id' => $trader->id,
                     'symbol' => $respPosition->symbol,
                     'entry_price' => $respPosition->entryPrice,
                     'size' => $respPosition->amount,
-                    'opened_at' => $openedAt,
                     'closed_at' => null
                 ])->first();
 
@@ -83,21 +84,41 @@ class PositionSync extends Command
                     $position->mark_price = $respPosition->markPrice;
                     $position->pnl = $respPosition->pnl;
                     $position->roe = $respPosition->roe * 100;
-                    $position->opened_at = $openedAt;
+                    $position->opened_at = $isNewTrader ? null : now();
+
+                    $coin = str_replace('USDT', '', $respPosition->symbol);
+                    $message = sprintf('NEW POSITION: @%s %s%s@%s',
+                        $trader->nick,
+                        $respPosition->amount,
+                        $coin,
+                        $respPosition->entryPrice
+                    );
+                    $this->info($message);
                 }
 
                 $position->save();
 
-                $presentTradeIds[] = $position->refresh()->id;
+                $presentPositionIds[] = $position->refresh()->id;
 
-                usleep(100000); // 0.1 sec
+                usleep(50000); // 0.05 sec
             }
 
             // Close positions for current trader,
             // which do not exist in the list obtained from the API
-            Position::whereNotIn('id', $presentTradeIds)
-                ->where('trader_id', $trader->id)
-                ->update(['closed_at' => Carbon::now()]);
+            $positionsForClosing = $trader->positions()
+                ->whereNotIn('id', $presentPositionIds)
+                ->get();
+
+            foreach ($positionsForClosing as $position) {
+                $position->closed_at = now();
+                $position->save();
+
+                $size = $position->size;
+                $coin = str_replace('USDT', '', $position->symbol);
+                $pnl = $position->pnl;
+
+                $this->info(sprintf('POSITION CLOSED: @%s | size:%s | pnl:%s', $trader->nick, $size . $coin, $pnl));
+            }
         }
 
         return 0;

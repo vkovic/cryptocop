@@ -13,7 +13,7 @@ class TraderSync extends Command
      *
      * @var string
      */
-    protected $signature = 'trader:sync';
+    protected $signature = 'sync:trader';
 
     /**
      * Create a new command instance.
@@ -63,6 +63,18 @@ class TraderSync extends Command
             if ($trader === null) {
                 $trader = new Trader;
                 $trader->uid = $traderUid;
+
+                $this->info('NEW TRADER ADDED: ' . $dataBaseInfo->nickName);
+            } else {
+                // Sharing changed info message
+                if ($trader->sharing !== $dataBaseInfo->positionShared) {
+                    $this->info(sprintf('SHARING CHANGED: @%s %s',
+                        $trader->nick,
+                        $dataBaseInfo->positionShared
+                            ? '=> now sharing'
+                            : '=> not sharing anymore'
+                    ));
+                }
             }
 
             $trader->nick = $dataBaseInfo->nickName;
