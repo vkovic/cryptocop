@@ -2,11 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Position;
-use App\Models\Trader;
-use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
 
 class Sync extends Command
 {
@@ -34,8 +30,8 @@ class Sync extends Command
      */
     public function handle()
     {
-        while(true) {
-            $this->alert('SYNC STARTED');
+        while (true) {
+            $this->alert('> SYNC STARTED: ' . now());
 
             try {
                 $this->call('sync:trader');
@@ -43,10 +39,12 @@ class Sync extends Command
             } catch (\Throwable $exception) {
                 $this->error($exception->getMessage());
 
+                sleep(120);
+
                 continue;
             }
 
-            $this->alert('SYNC END');
+            $this->alert('< SYNC END: ' . now());
 
             sleep(120);
         }

@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Http;
 
 class TraderSync extends Command
 {
+    use ColoredLinesOutput;
+
     /**
      * The name and signature of the console command.
      *
@@ -64,11 +66,11 @@ class TraderSync extends Command
                 $trader = new Trader;
                 $trader->uid = $traderUid;
 
-                $this->info('NEW TRADER ADDED: ' . $dataBaseInfo->nickName);
+                $this->lineGreen('NEW TRADER ADDED: ' . $dataBaseInfo->nickName);
             } else {
                 // Sharing changed info message
                 if ($trader->sharing !== $dataBaseInfo->positionShared) {
-                    $this->info(sprintf('SHARING CHANGED: @%s %s',
+                    $this->lineYellow(sprintf('SHARING CHANGED: @%s %s',
                         $trader->nick,
                         $dataBaseInfo->positionShared
                             ? '=> now sharing'

@@ -22,4 +22,12 @@ class Trader extends Model
     {
         return $this->hasMany(Position::class);
     }
+
+    public function getOpenedPositionsFor($symbol)
+    {
+        return $this->positions()->where([
+            'symbol' => $symbol,
+            'closed_at' => null
+        ])->first();
+    }
 }

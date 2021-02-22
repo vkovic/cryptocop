@@ -4,12 +4,13 @@ namespace App\Console\Commands;
 
 use App\Models\Position;
 use App\Models\Trader;
-use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
 class PositionSync extends Command
 {
+    use ColoredLinesOutput;
+
     /**
      * The name and signature of the console command.
      *
@@ -53,74 +54,125 @@ class PositionSync extends Command
             // Closed positions are not included in the response.
             $presentPositionIds = [];
 
-            // New trader is one which dont have prev. positions
-            $isNewTrader = $trader->positions()->count() === 0;
-
+            // Loop all present positions from the api response
             foreach ($data->otherPositionRetList as $respPosition) {
-                // Try to find same in our db
-                $position = Position::where([
-                    'trader_id' => $trader->id,
-                    'symbol' => $respPosition->symbol,
-                    'entry_price' => $respPosition->entryPrice,
-                    'size' => $respPosition->amount,
-                    'closed_at' => null
-                ])->first();
-
-                // Pos exist - update it
-                if ($position !== null) {
-                    $position->mark_price = $respPosition->markPrice;
-                    $position->pnl = $respPosition->pnl;
-                    $position->roe = $respPosition->roe * 100;
-                }
-                //
-                // New position
-                else {
-                    $position = new Position;
-
-                    $position->trader_id = $trader->id;
-                    $position->symbol = $respPosition->symbol;
-                    $position->size = $respPosition->amount;
-                    $position->entry_price = $respPosition->entryPrice;
-                    $position->mark_price = $respPosition->markPrice;
-                    $position->pnl = $respPosition->pnl;
-                    $position->roe = $respPosition->roe * 100;
-                    $position->opened_at = $isNewTrader ? null : now();
-
-                    $coin = str_replace('USDT', '', $respPosition->symbol);
-                    $message = sprintf('NEW POSITION: @%s %s%s@%s',
-                        $trader->nick,
-                        $respPosition->amount,
-                        $coin,
-                        $respPosition->entryPrice
-                    );
-                    $this->info($message);
-                }
-
-                $position->save();
-
-                $presentPositionIds[] = $position->refresh()->id;
+                $presentPositionIds[] = $this->createOrUpdatePositionForTrader($trader, $respPosition);
 
                 usleep(50000); // 0.05 sec
             }
 
-            // Close positions for current trader,
-            // which do not exist in the list obtained from the API
-            $positionsForClosing = $trader->positions()
-                ->whereNotIn('id', $presentPositionIds)
-                ->get();
-
-            foreach ($positionsForClosing as $position) {
-                $position->closed_at = now();
-                $position->save();
-
-                $size = $position->size;
-                $coin = str_replace('USDT', '', $position->symbol);
-                $pnl = $position->pnl;
-
-                $this->info(sprintf('POSITION CLOSED: @%s | size:%s | pnl:%s', $trader->nick, $size . $coin, $pnl));
-            }
+            $this->closePositionsForTraderByIds($trader, $presentPositionIds);
         }
 
         return 0;
+    }
+
+    /**
+     * Close positions for current trader,
+     * which do not exist in the list obtained from the API
+     *
+     * @param $trader
+     * @param $ids
+     */
+    protected function closePositionsForTraderByIds($trader, $ids)
+    {
+        $positionsForClosing = $trader->positions()
+            ->whereNotIn('id', $ids)
+            ->whereNull('closed_at')
+            ->get();
+
+        foreach ($positionsForClosing as $position) {
+            $position->closed_at = now();
+            $position->save();
+
+            $size = $position->size;
+            $coin = str_replace('USDT', '', $position->symbol);
+            $pnl = $position->pnl;
+
+            $this->lineRed(sprintf('POSITION CLOSED | %s: size:%s | pnl:%s', $trader->nick, $size . $coin, $pnl));
+        }
+    }
+
+    protected function createOrUpdatePositionForTrader($trader, $respPosition)
+    {
+        $type = $respPosition->amount < 0 ? 'short' : 'long';
+
+        // Trader might have multiple positions one long, one short
+        // (determined by negative amount)
+        $position = $trader->positions()
+            ->where('symbol', $respPosition->symbol)
+            ->whereNull('closed_at')
+            ->where('size', $type === 'short' ? '<' : '>', 0)
+            ->first();
+
+        $position = $position === null
+            ? $this->createNewPosition($trader, $respPosition)
+            : $this->updatePositionsForTrader($trader, $position, $respPosition);
+
+        return $position->id;
+    }
+
+    protected function createNewPosition($trader, $respPosition)
+    {
+        $symbol = $respPosition->symbol;
+        $coin = str_replace('USDT', '', $symbol);
+
+        // Save position
+        $position = new Position;
+        $position->trader_id = $trader->id;
+        $position->symbol = $symbol;
+        $position->size = $respPosition->amount;
+        $position->entry_price = $respPosition->entryPrice;
+        $position->mark_price = $respPosition->markPrice;
+        $position->pnl = $respPosition->pnl;
+        $position->roe = $respPosition->roe * 100;
+        $position->opened_at = now();
+        $position->save();
+
+        $message = sprintf('NEW POSITION | %s: %s%s@%s',
+            $trader->nick,
+            $respPosition->amount,
+            $coin,
+            $respPosition->entryPrice
+        );
+        $this->lineGreen($message);
+
+        return $position->refresh();
+    }
+
+    protected function updatePositionsForTrader($trader, $position, $respPosition)
+    {
+        $coin = str_replace('USDT', '', $respPosition->symbol);
+
+        // Difference from previous position size
+        $diff = $respPosition->amount - $position->size;
+
+        // Update position amount
+        if ($position->size != $respPosition->amount) {
+            $message = sprintf('POSITION UPDATE | %s: %sx%s@%s => %sx%s@%s (%s)',
+                $trader->nick,
+                // Old position: size x coin @ price
+                $position->size,
+                $coin,
+                $position->entry_price,
+                // New position: size x coin @ price
+                $respPosition->amount,
+                $coin,
+                $respPosition->entryPrice,
+                // Diff (add plus sign, minus is already there)
+                $diff < 0 ? $diff : '+' . $diff
+            );
+
+            $this->lineYellow($message);
+        }
+
+        $position->size = $respPosition->amount;
+        $position->entry_price = $respPosition->entryPrice;
+        $position->mark_price = $respPosition->markPrice;
+        $position->pnl = $respPosition->pnl;
+        $position->roe = $respPosition->roe * 100;
+        $position->save();
+
+        return $position->refresh();
     }
 }
