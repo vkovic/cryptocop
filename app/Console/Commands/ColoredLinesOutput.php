@@ -23,4 +23,9 @@ trait ColoredLinesOutput
     {
         $this->line('<fg=green>' . $message . '</>');
     }
+
+    protected function lineWhite($message)
+    {
+        $this->line('<fg=white>' . $message . '</>');
+    }
 }

@@ -58,7 +58,7 @@ class PositionSync extends Command
             foreach ($data->otherPositionRetList as $respPosition) {
                 $presentPositionIds[] = $this->createOrUpdatePositionForTrader($trader, $respPosition);
 
-                usleep(50000); // 0.05 sec
+                usleep(10000); // 0.01 sec
             }
 
             $this->closePositionsForTraderByIds($trader, $presentPositionIds);
@@ -87,9 +87,15 @@ class PositionSync extends Command
 
             $size = $position->size;
             $coin = str_replace('USDT', '', $position->symbol);
-            $pnl = $position->pnl;
 
-            $this->lineRed(sprintf('POSITION CLOSED | %s: size:%s | pnl:%s', $trader->nick, $size . $coin, $pnl));
+            $this->lineRed(sprintf('POSITION CLOSED | %s: %s~%s@%s (pnl:%s, roe:%s)',
+                $trader->nick,
+                $size,
+                $coin,
+                $position->mark_price,
+                round($position->pnl),
+                round($position->roe),
+            ));
         }
     }
 
@@ -129,11 +135,14 @@ class PositionSync extends Command
         $position->opened_at = now();
         $position->save();
 
-        $message = sprintf('NEW POSITION | %s: %s%s@%s',
+        $message = sprintf('NEW POSITION | %s: %s~%s@%s (inv:%s | lev:%s | cost:%s)',
             $trader->nick,
             $respPosition->amount,
             $coin,
-            $respPosition->entryPrice
+            $respPosition->entryPrice,
+            round($position->invested),
+            round($position->leverage),
+            round($position->cost),
         );
         $this->lineGreen($message);
 
@@ -149,7 +158,7 @@ class PositionSync extends Command
 
         // Update position amount
         if ($position->size != $respPosition->amount) {
-            $message = sprintf('POSITION UPDATE | %s: %sx%s@%s => %sx%s@%s (%s)',
+            $message = sprintf('POSITION UPDATE | %s: %s~%s@%s => %s~%s@%s (%s)',
                 $trader->nick,
                 // Old position: size x coin @ price
                 $position->size,

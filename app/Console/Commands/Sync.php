@@ -6,6 +6,8 @@ use Illuminate\Console\Command;
 
 class Sync extends Command
 {
+    use ColoredLinesOutput;
+
     /**
      * The name and signature of the console command.
      *
@@ -31,7 +33,7 @@ class Sync extends Command
     public function handle()
     {
         while (true) {
-            $this->alert('> SYNC STARTED: ' . now());
+            $this->lineWhite('SYNC START: ' . now());
 
             try {
                 $this->call('sync:trader');
@@ -44,9 +46,10 @@ class Sync extends Command
                 continue;
             }
 
-            $this->alert('< SYNC END: ' . now());
+            $this->lineWhite('SYNC END: ' . now());
+            $this->lineWhite('...');
 
-            sleep(120);
+            sleep(30);
         }
 
         return 0;
