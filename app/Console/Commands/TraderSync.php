@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Position;
 use App\Models\Trader;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
@@ -37,6 +38,15 @@ class TraderSync extends Command
         $traderUids = config('traders');
         $baseInfoUrl = 'https://www.binance.com/gateway-api/v1/public/future/leaderboard/getOtherLeaderboardBaseInfo';
         $infoUrl = 'https://www.binance.com/gateway-api/v1/public/future/leaderboard/getOtherLeaderboardInfo';
+
+        // Remove all trades from removed traders (from traders config array)
+        // and corresponding positions
+        Trader::whereNotIn('uid', $traderUids)->get()->each(function (Trader $trader) {
+            $trader->positions()->delete();
+            $trader->delete();
+
+            $this->lineRed('TRADER REMOVED: ' . $trader->nick);
+        });
 
         foreach ($traderUids as $traderUid) {
             $payloadBaseInfoUrl = [
