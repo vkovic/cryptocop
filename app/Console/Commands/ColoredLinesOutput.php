@@ -28,4 +28,34 @@ trait ColoredLinesOutput
     {
         $this->line('<fg=white>' . $message . '</>');
     }
+
+    protected function textMagenta($text)
+    {
+        return '<fg=magenta>' . $text . '</>';
+    }
+
+    protected function textRed($text)
+    {
+        return '<fg=red>' . $text . '</>';
+    }
+
+    protected function textGreen($text)
+    {
+        return '<fg=green>' . $text . '</>';
+    }
+
+    protected function textYellow($text)
+    {
+        return '<fg=yellow>' . $text . '</>';
+    }
+
+    protected function textWhite($text)
+    {
+        return '<fg=white>' . $text . '</>';
+    }
+
+    protected function textDefault($text)
+    {
+        return '<fg=default>' . $text . '</>';
+    }
 }
