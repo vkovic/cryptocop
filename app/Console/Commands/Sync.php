@@ -64,8 +64,13 @@ class Sync extends Command
 
     protected function displayStats()
     {
-        // Top symbols
+        $title = 'STATS | ' . now()->format('m-d H:i:s');
+        $this->alert($title);
+
         $this->displayTopSymbolStats();
+
+        $this->newLine();
+        $this->lineYellow('**********************************');
     }
 
     protected function displayTopSymbolStats()
@@ -73,24 +78,26 @@ class Sync extends Command
         $positions = \DB::table('position_stats')->where('total', '>', 4)->get();
 
         $tableData = [];
-        $tableHeaders = ['SYMBOL', 'TOTAL', 'MONEY IN (lev)', 'AVG LEV', 'SCORE'];
+        $tableHeaders = ['SYMBOL', 'POSITIONS', 'SIZE', 'MONEY IN (lev)', 'AVG LEV', 'SCORE'];
         foreach ($positions as $position) {
             $coin = str_replace('USDT', '', $position->symbol);
 
             $tableData[] = [
                 $this->textGreen($coin . ' longs'),
-                number_format($position->longs, 0, ',', '.'),
-                number_format($position->total_longs, 0, ',', '.'),
-                $position->avg_lev_longs,
-                number_format($position->score_longs, 0, ',', '.'),
+                $this->textGreen(number_format($position->longs, 0, ',', '.')),
+                $this->textGreen($position->size_longs),
+                $this->textGreen(number_format($position->cost_longs, 0, ',', '.')),
+                $this->textGreen($position->avg_lev_longs),
+                $this->textGreen($position->trader_score_longs),
             ];
 
             $tableData[] = [
                 $this->textRed($coin . ' shorts'),
-                number_format($position->shorts, 0, ',', '.'),
-                number_format($position->total_shorts, 0, ',', '.'),
-                $position->avg_lev_shorts,
-                number_format($position->score_shorts, 0, ',', '.'),
+                $this->textRed(number_format($position->shorts, 0, ',', '.')),
+                $this->textRed($position->size_shorts),
+                $this->textRed(number_format($position->cost_shorts, 0, ',', '.')),
+                $this->textRed($position->avg_lev_shorts),
+                $this->textRed($position->trader_score_shorts),
             ];
 
             if ($position !== $positions[count($positions) - 1]) {
@@ -98,6 +105,7 @@ class Sync extends Command
             }
         }
 
+        $this->lineYellow('TOP SYMBOLS STATS');
         $this->table($tableHeaders, $tableData);
     }
 }
