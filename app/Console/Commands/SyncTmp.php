@@ -2,12 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Trader;
 use Illuminate\Console\Command;
 use noximo\PHPColoredAsciiLinechart\Colorizers\AsciiColorizer;
 use noximo\PHPColoredAsciiLinechart\Linechart;
 use noximo\PHPColoredAsciiLinechart\Settings;
 
-class Sync extends Command
+class SyncTmp extends Command
 {
     use ColoredLinesOutput;
 
@@ -18,7 +19,7 @@ class Sync extends Command
      *
      * @var string
      */
-    protected $signature = 'syncXXX';
+    protected $signature = 'sync';
 
     /**
      * Create a new command instance.
@@ -37,11 +38,32 @@ class Sync extends Command
      */
     public function handle()
     {
+        $i = 0;
+        while (true) {
+
+            if ($i > 10) {
+                break;
+            }
+
+            Trader::factory()->create();
+
+
+
+            $i++;
+
+            sleep(2);
+        }
+
+        die;
         while (true) {
             $this->lineWhite('SYNC START #' . $this->syncCycle + 1 . ': ' . now());
 
             try {
+                // Sync traders
                 $this->call('sync:trader');
+                usleep(10000); // 0.01 sec
+
+                // Sync positions
                 $this->call('sync:position');
                 $this->syncCycle++;
             } catch (\Throwable $exception) {

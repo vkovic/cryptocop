@@ -7,7 +7,7 @@ use App\Models\Trader;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
-class TraderSync extends Command
+class TraderSyncTmp extends Command
 {
     use ColoredLinesOutput;
 
@@ -16,7 +16,7 @@ class TraderSync extends Command
      *
      * @var string
      */
-    protected $signature = 'sync:traderXXX';
+    protected $signature = 'sync:trader';
 
     /**
      * Create a new command instance.
@@ -44,8 +44,6 @@ class TraderSync extends Command
         Trader::whereNotIn('uid', $traderUids)->get()->each(function (Trader $trader) {
             $trader->positions()->delete();
             $trader->delete();
-
-            $this->lineRed('TRADER REMOVED: ' . $trader->nick);
         });
 
         foreach ($traderUids as $traderUid) {
@@ -75,18 +73,6 @@ class TraderSync extends Command
             if ($trader === null) {
                 $trader = new Trader;
                 $trader->uid = $traderUid;
-
-                $this->lineGreen('NEW TRADER ADDED: ' . $dataBaseInfo->nickName);
-            } else {
-                // Sharing changed info message
-                if ($trader->sharing !== $dataBaseInfo->positionShared) {
-                    $this->lineYellow(sprintf('SHARING CHANGED: @%s %s',
-                        $trader->nick,
-                        $dataBaseInfo->positionShared
-                            ? '=> now sharing'
-                            : '=> not sharing anymore'
-                    ));
-                }
             }
 
             $trader->nick = $dataBaseInfo->nickName;
@@ -114,8 +100,6 @@ class TraderSync extends Command
             $trader->pnl_month = $dataBaseInfo->monthlyPnlValue;
 
             $trader->save();
-
-            usleep(10000); // 0.01 sec
         }
 
         return 0;

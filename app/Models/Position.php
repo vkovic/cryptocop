@@ -15,7 +15,7 @@ class Position extends Model
 
     protected static function booted()
     {
-        static::creating(function (Position $position) {
+        static::saving(function (Position $position) {
             if ($position->pnl === null
                 || $position->roe === null
                 || $position->size === null
@@ -27,6 +27,11 @@ class Position extends Model
             $position->invested = abs($position->pnl * 100 / $position->roe);
             $position->cost = abs($position->size * $position->entry_price);
             $position->leverage = abs($position->cost / $position->invested);
+        });
+
+
+        static::creating(function (Position $position) {
+            //$position->initial_entry_price = $position->entry_price;
         });
     }
 }

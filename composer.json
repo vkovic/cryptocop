@@ -15,10 +15,12 @@
         "laravel/framework": "^8.12",
         "laravel/tinker": "^2.5",
         "livewire/livewire": "^2.3",
+        "noximo/php-colored-ascii-linechart": "^1.1",
         "spatie/data-transfer-object": "^2.8",
         "vkovic/laravel-commando": "^0.2.0"
     },
     "require-dev": {
+        "beyondcode/laravel-dump-server": "^1.7",
         "facade/ignition": "^2.5",
         "fakerphp/faker": "^1.9.1",
         "laravel/sail": "^1.0.1",
