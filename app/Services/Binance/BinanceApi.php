@@ -2,6 +2,8 @@
 
 namespace App\Services\Binance;
 
+use GuzzleHttp\Client;
+
 class BinanceApi
 {
     const SIDE_BUY = 'BUY';
@@ -27,14 +29,11 @@ class BinanceApi
             'side' => 'BUY',
             'positionSide' => 'LONG',
             'type' => 'LIMIT',
-            'timeInForce' => 'GTC', // Mandatory with 'LIMIT' order type
             'quantity' => $quantity,
             'price' => (float) $price + (2 * $price / 100), // Add 2% price to buy instantly
-            'recvWindow' => 60000,
-            'timestamp' => $this->timestamp()
         ];
 
-        return $this->httpRequest('v1/order', 'POST', $params, true);
+        return $this->apiRequest('POST', 'v1/order', $params, true);
     }
 
     public function limitSell(string $symbol, $quantity, $price)
@@ -44,82 +43,39 @@ class BinanceApi
             'side' => 'SELL',
             'positionSide' => 'SHORT',
             'type' => 'LIMIT',
-            'timeInForce' => 'GTC',
             'quantity' => $quantity,
             'price' => (float) $price - (2 * $price / 100), // Reduce by 2% to sell instantly
-            'recvWindow' => 60000,
+        ];
+
+        return $this->apiRequest('POST', 'v1/order', $params, true);
+    }
+
+    public function timestamp()
+    {
+        return number_format(microtime(true) * 1000, 0, '.', ''); // TRY  (int) (time() * 1000)
+    }
+
+    public function apiRequest($method, $uri, $params = [])
+    {
+        $defaultParams = [
+            'timeInForce' => 'GTC',
+            'recWindows' => 5000,
             'timestamp' => $this->timestamp()
         ];
 
-        return $this->httpRequest('v1/order', 'POST', $params, true);
+        $params = array_merge($defaultParams, $params);
+
+        // Append signature to the request params
+        $params['signature'] = $this->sign($params);
+
+        return (new Client())->request($method, $this->base . $uri, [
+            'headers' => ['X-MBX-APIKEY' => $this->apiKey],
+            'query' => $params,
+        ])->getBody()->getContents();
     }
 
-    protected function timestamp()
+    protected function sign($params)
     {
-        return number_format(microtime(true) * 1000, 0, '.', '');
-    }
-
-    protected function request(string $url, string $method = 'GET', array $params = [], bool $signed = false)
-    {
-        $curl = curl_init();
-        $base = $this->base;
-        $query = http_build_query($params, '', '&');
-
-        // Signing
-        if ($signed === true) {
-            $query = http_build_query($params, '', '&');
-            $signature = hash_hmac('sha256', $query, $this->apiSecret);
-            if ($method === 'POST') {
-                $endpoint = $base . $url;
-                $params['signature'] = $signature; // signature needs to be inside BODY
-                $query = http_build_query($params, '', '&'); // rebuilding query
-            } else {
-                $endpoint = $base . $url . '?' . $query . '&signature=' . $signature;
-            }
-
-            curl_setopt($curl, CURLOPT_URL, $endpoint);
-            curl_setopt($curl, CURLOPT_HTTPHEADER, ['X-MBX-APIKEY: ' . $this->apiKey]);
-        }
-
-        curl_setopt($curl, CURLOPT_USERAGENT, 'User-Agent: Mozilla/4.0 (compatible; PHP Binance API)');
-
-        // POST method
-        if ($method === 'POST') {
-            curl_setopt($curl, CURLOPT_POST, true);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $query);
-        }
-
-        // DELETE method
-        if ($method === 'DELETE') {
-            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
-        }
-
-        // PUT method
-        if ($method === 'PUT') {
-            curl_setopt($curl, CURLOPT_PUT, true);
-        }
-
-        // Std CURL options
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($curl, CURLOPT_HEADER, true);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 60);
-
-        $output = curl_exec($curl);
-
-        // Check if any error occurred
-        if (curl_errno($curl) > 0) {
-            // should always output error, not only on httpdebug
-            // not outputing errors, hides it from users and ends up with tickets on github
-            throw new \Exception('Curl error: ' . curl_error($curl));
-        }
-
-        curl_close($curl);
-
-        $json = json_decode($output, true);
-
-        return $json;
+        return hash_hmac('sha256', http_build_query($params), $this->apiSecret);
     }
 }
