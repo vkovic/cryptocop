@@ -47,18 +47,29 @@ class BinanceApiTestCommand extends Command
 
         $bApi = new BinanceApi();
 
-        //$bApi->apiRequest('POST', 'test', ['a' => 12, 'b' => 'as']);
+        //dd($bApi->symbolInfo('ALPHAUSDT'));
 
-        //dd($bApi->getCurrentPosMode());
+//        dd([
+//            //'openOrders' => $bApi->openOrders('ETHUSDT'),
+//            //'allOrders' => $bApi->allOrders('ETHUSDT', 3),
+//            'positionInfo' => $bApi->positionInfo('ETHUSDT'),
+//        ]);
 
-        $bApi->timestamp = $bApi->timestamp();
 
-        dd($bApi->limitBuy('ETHUSDT', 0.01, 1700));
+        //dump($bApi->limitBuy('ALPHAUSDT', 5, 1.8));
+
+
+
+        //sleep(5);
+
+        dd($bApi->closePosition('ALPHAUSDT'));
+
+        return 0;
     }
 
     public function syncPos()
     {
-
+        //
         $endpoint = 'https://www.binance.com/gateway-api/v1/public/future/leaderboard/getOtherPosition';
         $payload = ['encryptedUid' => '9745A111F31F836D6D2E9F758DA3A07B', 'tradeType' => 'PERPETUAL'];
 
